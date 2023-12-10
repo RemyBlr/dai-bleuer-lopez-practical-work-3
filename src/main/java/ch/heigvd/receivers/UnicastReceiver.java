@@ -1,5 +1,6 @@
 package ch.heigvd.receivers;
 
+import ch.heigvd.Event;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -58,18 +59,23 @@ public class UnicastReceiver implements Callable<Integer> {
     )
     static class GetEventCommand implements Runnable {
 
-        @Parameters(index = "0", description = "Event name")
+        @Parameters(index = "0", description = "List of all events")
+        private String eventsList;
+        @Parameters(index = "1", description = "List all event names")
         private String eventName;
-
-        @Parameters(index = "1", description = "Event date")
+        @Parameters(index = "2", description = "List all event dates")
         private String eventDate;
-
-        @Option(names = {"-l", "--location"}, description = "Event location")
+        @Parameters(index = "3", description = "List all event locations")
         private String eventLocation;
+        @Parameters(index = "4", description = "List all event descriptions")
+        private String eventDescription;
+
+        @Option(names = {"-i", "--info"}, description = "information about a specfic event (Event name)")
+        private String eventInfo;
 
         @Override
         public void run() {
-            System.out.println("Getting information about event: " + eventName);
+            // TODO logic to send a unicast request to the server
         }
     }
 
@@ -87,6 +93,42 @@ public class UnicastReceiver implements Callable<Integer> {
         public void run() {
             String message = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
             System.out.println("Unicast receiver (" + myself + ") received message: " + message);
+
+            // Event example
+            // Java Conference, 01.03.2023, Lausanne, une conférence sur le meilleur langage de programmation
+            String[] parts = message.split(",");
+            if (parts.length != 4) {
+                System.out.println("Invalid request format.");
+                return;
+            }
+
+            String eventName = parts[0];
+            String eventDate = parts[1];
+            String eventLocation = parts[2];
+            String eventDescription = parts[3];
+
+            Event event = retrieveEventDetails(eventName, eventDate, eventLocation, eventDescription);
+
+            sendUnicastResponse(event, packet.getAddress(), packet.getPort());
+        }
+    }
+
+    private static Event retrieveEventDetails(String eventName, String eventDate, String eventLocation, String eventDescription) {
+        // TODO implement logic to retrieve event details from the server
+        return null;
+    }
+
+    private static void sendUnicastResponse(Event event, InetAddress clientAddress, int clientPort) {
+        if (event != null) {
+            String response = event.toString();
+            byte[] responseData = response.getBytes(StandardCharsets.UTF_8);
+
+            try (DatagramSocket responseSocket = new DatagramSocket()) {
+                DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
+                responseSocket.send(responsePacket);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
