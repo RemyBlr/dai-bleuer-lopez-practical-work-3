@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  event-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: event-server
+    ports:
+      - "9876:9876/udp"
+      - "9877:9877/udp"

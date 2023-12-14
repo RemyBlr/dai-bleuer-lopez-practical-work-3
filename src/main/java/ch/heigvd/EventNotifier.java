@@ -28,6 +28,7 @@ public class EventNotifier implements Callable<Integer> {
     @Option(names = {"-t", "--threads"}, description = "Number of threads to use")
     private int threadsNbr = 10;
 
+    private static final int MAX_UDP_PACKET_SIZE = 65507;
     @Override
     public Integer call() {
         ExecutorService executor = null;
@@ -43,7 +44,7 @@ public class EventNotifier implements Callable<Integer> {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
             System.out.println("Event server started (" + myself + ")");
 
-            byte[] receiveData = new byte[1024];
+            byte[] receiveData = new byte[MAX_UDP_PACKET_SIZE];
 
             while (true) {
                 // Multicast messages
@@ -57,6 +58,7 @@ public class EventNotifier implements Callable<Integer> {
                 executor.submit(new UnicastClientHandler(unicastPacket, myself));
             }
         } catch (Exception e) {
+            // Log the exception using a logging framework
             e.printStackTrace();
             return 1;
         } finally {
