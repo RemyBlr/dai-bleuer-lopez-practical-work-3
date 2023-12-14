@@ -25,6 +25,7 @@ public class UnicastReceiver implements Callable<Integer> {
     @Option(names = {"-t", "--threads"}, description = "Number of threads to use")
     private int threadsNbr = 10;
 
+    private static final int MAX_UDP_PACKET_SIZE = 1024;
     @Override
     public Integer call() {
         ExecutorService executor = null;
@@ -35,7 +36,7 @@ public class UnicastReceiver implements Callable<Integer> {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + port;
             System.out.println("Unicast receiver started (" + myself + ")");
 
-            byte[] receiveData = new byte[1024];
+            byte[] receiveData = new byte[MAX_UDP_PACKET_SIZE];
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);

@@ -23,6 +23,7 @@ public class EventCommand implements Runnable {
     @CommandLine.Option(names = {"-i", "--info"}, description = "information about a specfic event (Event name)")
     private String eventInfo;
 
+
     @Override
     public void run() {
         // TODO logic to send a unicast request to the server
