@@ -28,6 +28,8 @@ public class EventNotifier implements Callable<Integer> {
     @Option(names = {"-t", "--threads"}, description = "Number of threads to use")
     private int threadsNbr = 10;
 
+    private static final int MAX_UDP_PACKET_SIZE = 65507;
+
     @Override
     public Integer call() {
         ExecutorService executor = null;
@@ -42,21 +44,26 @@ public class EventNotifier implements Callable<Integer> {
 
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
             System.out.println("Event server started (" + myself + ")");
+            System.out.println("Multicast group: " + multicastAddress);
 
-            byte[] receiveData = new byte[1024];
+            byte[] multicastReceiveData = new byte[MAX_UDP_PACKET_SIZE];
+            byte[] unicastReceiveData = new byte[MAX_UDP_PACKET_SIZE];
 
             while (true) {
                 // Multicast messages
-                DatagramPacket multicastPacket = new DatagramPacket(receiveData, receiveData.length);
+                DatagramPacket multicastPacket = new DatagramPacket(multicastReceiveData, multicastReceiveData.length);
                 multicastSocket.receive(multicastPacket);
-                executor.submit(new MulticastClientHandler(multicastPacket, myself));
+                executor.submit(new MulticastClientHandler(multicastPacket,
+                                                           multicastAddress));
 
                 // Unicast messages
-                DatagramPacket unicastPacket = new DatagramPacket(receiveData, receiveData.length);
+                DatagramPacket unicastPacket = new DatagramPacket(unicastReceiveData, unicastReceiveData.length);
                 unicastSocket.receive(unicastPacket);
                 executor.submit(new UnicastClientHandler(unicastPacket, myself));
             }
+
         } catch (Exception e) {
+            // Log the exception using a logging framework
             e.printStackTrace();
             return 1;
         } finally {
@@ -75,6 +82,9 @@ public class EventNotifier implements Callable<Integer> {
     static class MulticastClientHandler extends ClientHandler {
         public MulticastClientHandler(DatagramPacket packet, String myself) {
             super(packet, myself);
+            super.run();
+            System.out.println("Multicast receiver (" + myself + ") received " +
+                                       "message: " + packet.toString());
         }
     }
 }

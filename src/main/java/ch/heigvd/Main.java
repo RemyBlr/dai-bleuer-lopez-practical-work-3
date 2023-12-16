@@ -1,7 +1,18 @@
 package ch.heigvd;
 
-public class Main {
+import ch.heigvd.emitter.EventEmitter;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+
+@Command(name = "DirectChat", subcommands = {EventEmitter.class,
+        EventNotifier.class, EventCommand.class})
+public class Main implements Runnable {
+
+    public void run() {
+        System.out.println("Please specify a subcommand: server or client.");
+    }
+
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+        CommandLine.run(new Main(), args);
     }
 }

@@ -20,4 +20,8 @@ public class Event {
                 "\nDescription: " + this.description +
                 "\n";
     }
+
+    public byte[] getBytes() {
+        return this.toString().getBytes();
+    }
 }
