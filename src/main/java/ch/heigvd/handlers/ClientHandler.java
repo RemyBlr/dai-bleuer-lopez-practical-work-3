@@ -7,11 +7,13 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 
 public class ClientHandler implements Runnable {
 
     private final DatagramPacket packet;
     private final String myself;
+    private LinkedList<Event> events = new LinkedList<>();
 
     public ClientHandler(DatagramPacket packet, String myself) {
         this.packet = packet;
@@ -37,9 +39,8 @@ public class ClientHandler implements Runnable {
         String eventLocation = parts[2];
         String eventDescription = parts[3];
 
-        Event event = retrieveEventDetails(eventName, eventDate, eventLocation, eventDescription);
+        events.add(new Event(eventName, eventDate, eventLocation,eventDescription));
 
-        sendUnicastResponse(event, packet.getAddress(), packet.getPort());
     }
 
     private static void sendUnicastResponse(Event event, InetAddress clientAddress, int clientPort) {
