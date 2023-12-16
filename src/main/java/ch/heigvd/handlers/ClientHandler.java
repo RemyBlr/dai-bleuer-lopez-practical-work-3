@@ -21,11 +21,12 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String message = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
-        System.out.println("Unicast receiver (" + myself + ") received message: " + message);
+        System.out.println("Message recieved (" + myself + ") " +
+                                   "received message: " + message);
 
         // Event example
         // Java Conference, 01.03.2023, Lausanne, une conférence sur le meilleur langage de programmation
-        String[] parts = message.split(",");
+        String[] parts = message.split("\n");
         if (parts.length != 4) {
             System.out.println("Invalid request format.");
             return;
