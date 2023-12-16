@@ -9,6 +9,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +32,9 @@ public class EventNotifier implements Callable<Integer> {
     private int threadsNbr = 10;
 
     private static final int MAX_UDP_PACKET_SIZE = 65507;
+
+    private static List<Event> receivedEvents = new ArrayList<>();
+
 
     @Override
     public Integer call() {
@@ -77,6 +83,34 @@ public class EventNotifier implements Callable<Integer> {
         public UnicastClientHandler(DatagramPacket packet, String myself) {
             super(packet, myself);
         }
+
+        @Override
+        public void run() {
+            super.run();
+
+            // Add the received event to the list
+            Event event = parseEventFromMessage(new String(getPacket().getData(), getPacket().getOffset(), getPacket().getLength(), StandardCharsets.UTF_8));
+            receivedEvents.add(event);
+        }
+    }
+
+    private static Event parseEventFromMessage(String message) {
+        String[] parts = message.split(",");
+        if (parts.length != 4) {
+            System.out.println("Invalid event format.");
+            return null;
+        }
+
+        String eventName = parts[0];
+        String eventDate = parts[1];
+        String eventLocation = parts[2];
+        String eventDescription = parts[3];
+
+        return new Event(eventName, eventDate, eventLocation, eventDescription);
+    }
+
+    public static List<Event> getReceivedEvents() {
+        return receivedEvents;
     }
 
     static class MulticastClientHandler extends ClientHandler {

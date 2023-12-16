@@ -21,15 +21,20 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String message = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
-        System.out.println("Message recieved (" + myself + ") " +
-                                   "received message: " + message);
+        System.out.println("Unicast receiver (" + myself + ") received message: " + message);
 
-        // Event example
-        // Java Conference, 01.03.2023, Lausanne, une conférence sur le meilleur langage de programmation
-        String[] parts = message.split("\n");
+        Event event = parseEventFromMessage(message);
+
+        if (event != null) {
+            sendUnicastResponse(event, packet.getAddress(), packet.getPort());
+        }
+    }
+
+    private static Event parseEventFromMessage(String message) {
+        String[] parts = message.split(",");
         if (parts.length != 4) {
             System.out.println("Invalid request format.");
-            return;
+            return null;
         }
 
         String eventName = parts[0];
@@ -37,9 +42,7 @@ public class ClientHandler implements Runnable {
         String eventLocation = parts[2];
         String eventDescription = parts[3];
 
-        Event event = retrieveEventDetails(eventName, eventDate, eventLocation, eventDescription);
-
-        sendUnicastResponse(event, packet.getAddress(), packet.getPort());
+        return new Event(eventName, eventDate, eventLocation, eventDescription);
     }
 
     private static void sendUnicastResponse(Event event, InetAddress clientAddress, int clientPort) {
@@ -56,8 +59,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private static Event retrieveEventDetails(String eventName, String eventDate, String eventLocation, String eventDescription) {
-        // TODO implement logic to retrieve event details from the server
-        return null;
+    public DatagramPacket getPacket() {
+        return packet;
     }
 }
