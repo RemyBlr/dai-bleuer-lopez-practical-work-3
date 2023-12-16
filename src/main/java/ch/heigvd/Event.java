@@ -24,4 +24,8 @@ public class Event {
     public byte[] getBytes() {
         return this.toString().getBytes();
     }
+
+    public String getName() {
+        return this.name;
+    }
 }
