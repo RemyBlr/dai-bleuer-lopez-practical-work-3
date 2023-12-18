@@ -38,6 +38,7 @@ public class UnicastReceiver implements Callable<Integer> {
 
             byte[] receiveData = new byte[MAX_UDP_PACKET_SIZE];
 
+
             while (true) {
                 DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(packet);
@@ -53,9 +54,11 @@ public class UnicastReceiver implements Callable<Integer> {
         }
     }
 
+
+
     public static void main(String[] args) {
         int exitCode = new CommandLine(new UnicastReceiver())
-                .addSubcommand(new EventCommand())
+                //.addSubcommand(new EventCommand())
                 .execute(args);
         System.exit(exitCode);
     }

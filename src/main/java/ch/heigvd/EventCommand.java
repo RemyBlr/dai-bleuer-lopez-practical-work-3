@@ -2,6 +2,11 @@ package ch.heigvd;
 
 import picocli.CommandLine;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Scanner;
 
@@ -11,6 +16,19 @@ import java.util.Scanner;
         description = "Get information about a specific event using unicast"
 )
 public class EventCommand implements Runnable {
+
+    @CommandLine.Option(names = {"-p", "--port"}, description = "UDP port to " +
+            "send the request to")
+    private int port = 9876; // Default port, change as needed
+
+    @CommandLine.Option(names = {"-i", "--ip"}, description = "IP address to send the request to")
+    private String ip = InetAddress.getLocalHost().getHostAddress(); //
+    // Default port, change as needed
+
+    public EventCommand() throws UnknownHostException {}
+
+    private static final int MAX_UDP_PACKET_SIZE = 1024;
+
 
     @Override
     public void run() {
@@ -27,7 +45,7 @@ public class EventCommand implements Runnable {
 
             switch (choice) {
                 case 1:
-                    listAllEvents();
+                    sendUnicastMessage("list");
                     break;
                 case 2:
                     getEventDetailsByName();
@@ -40,16 +58,41 @@ public class EventCommand implements Runnable {
             }
         }
     }
-    private void listAllEvents() {
-        List<Event> receivedEvents = EventNotifier.getReceivedEvents();
 
-        if (receivedEvents.isEmpty()) {
-            System.out.println("No events");
-        } else {
-            System.out.println("List of all events:");
-            for (Event event : receivedEvents) {
-                System.out.println(event.toString());
+    private void sendUnicastMessage(String request) {
+        byte[] responseData = request.getBytes(StandardCharsets.UTF_8);
+
+        try (DatagramSocket socket = new DatagramSocket()) {
+            DatagramPacket responsePacket = new DatagramPacket(responseData,
+                                                               responseData.length, InetAddress.getByName(ip), port);
+            socket.send(responsePacket);
+
+            byte[] receiveData = new byte[MAX_UDP_PACKET_SIZE];
+            DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+            socket.receive(packet);
+
+            String message = new String(packet.getData(),
+                                        packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
+
+            if (message.isEmpty() || message.equals("[]")) {
+                System.out.println("No events");
+            } else {
+
+                // message cleaning
+                message = message.substring(1, message.length() - 1).trim();
+                message = message.replace(",", "\n");
+
+
+                if (request.equals("list")) {
+                    System.out.println("List of all events:\n");
+                } else {
+                    System.out.println("Event details:\n");
+                }
+                System.out.println(message + "\n");
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -58,16 +101,6 @@ public class EventCommand implements Runnable {
         System.out.print("Enter event name: ");
         String eventName = scanner.nextLine();
 
-        List<Event> receivedEvents = EventNotifier.getReceivedEvents();
-
-        for (Event event : receivedEvents) {
-            if (event.getName().equalsIgnoreCase(eventName)) {
-                System.out.println("Details for '" + eventName + "':");
-                System.out.println(event.toString());
-                return;
-            }
-        }
-
-        System.out.println("Event '" + eventName + "' not found.");
+        sendUnicastMessage(eventName);
     }
 }
