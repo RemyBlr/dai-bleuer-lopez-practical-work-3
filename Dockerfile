@@ -1,15 +1,18 @@
-# Use a base image with OpenJDK
-FROM alpine:3.18
+# Start from the Java 17 Temurin image
+FROM eclipse-temurin:17
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the JAR file into the container
+# Copy the jar file
 COPY target/dai-bleuer-lopez-practical-work-3-1.0-SNAPSHOT.jar /app/dai-bleuer-lopez-practical-work-3-1.0-SNAPSHOT.jar
 
 # Expose the necessary ports
 EXPOSE 9876/udp
 EXPOSE 9877/udp
 
-# Define the command to run your application
-CMD ["java", "-jar", "dai-bleuer-lopez-practical-work-3-1.0-SNAPSHOT.jar"]
+# Set the entrypoint
+ENTRYPOINT ["java", "-jar", "dai-bleuer-lopez-practical-work-3-1.0-SNAPSHOT.jar"]
+
+# Set the default command
+CMD ["--help"]
