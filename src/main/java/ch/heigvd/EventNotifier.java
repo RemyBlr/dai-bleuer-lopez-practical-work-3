@@ -15,6 +15,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * This class implements a command that can be used to start an event server to receive multicast and unicast messages
+ * @Authors Bleuer Rémy, Lopez Esteban
+ */
 @Command(name = "event-server", description = "Start an event server to receive multicast and unicast messages")
 public class EventNotifier implements Callable<Integer> {
 
@@ -27,27 +31,33 @@ public class EventNotifier implements Callable<Integer> {
     @Option(names = {"-t", "--threads"}, description = "Number of threads to use")
     private int threadsNbr = 10;
 
+    // Maximum size of a UDP packet
     private static final int MAX_UDP_PACKET_SIZE = 65507;
 
+    // List of received events
     private static List<Event> receivedEvents = new ArrayList<>();
 
     @Override
     public Integer call() {
         ExecutorService executor = null;
 
+        // Create a DatagramSocket for receiving unicast messages
         try (DatagramSocket unicastSocket = new DatagramSocket(unicastPort);
              MulticastSocket multicastSocket = new MulticastSocket(Integer.parseInt(multicastAddress.split(":")[1]))) {
 
+            // Specify the multicast group and port
             InetAddress multicastGroup = InetAddress.getByName(multicastAddress.split(":")[0]);
             multicastSocket.joinGroup(multicastGroup);
 
+            // Create a thread pool
             executor = Executors.newFixedThreadPool(threadsNbr);
 
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" +
-                    unicastPort;
+            // Display server information
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
             System.out.println("Event server started (" + myself + ")");
             System.out.println("Multicast group: " + multicastAddress);
 
+            // Buffers for receiving data
             byte[] multicastReceiveData = new byte[MAX_UDP_PACKET_SIZE];
             byte[] unicastReceiveData = new byte[MAX_UDP_PACKET_SIZE];
 
@@ -84,32 +94,44 @@ public class EventNotifier implements Callable<Integer> {
         }
     }
 
+    /**
+     * This method handles a multicast message
+     * @param packet the packet containing the multicast message
+     */
     private void handleMulticastMessage(DatagramPacket packet) {
         Event event = parseEventFromMessage(new String(packet.getData(),
-                                                       packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+                                                       packet.getOffset(),
+                                                       packet.getLength(),
+                                                       StandardCharsets.UTF_8));
 
         if (event != null)
             receivedEvents.add(event);
 
-        System.out.println("Multicast receiver received " +
-                                   "message: \n" + event);
+        System.out.println("Multicast receiver received message: \n" + event);
     }
 
+    /**
+     * This method handles a unicast message
+     * @param packet the packet containing the unicast message
+     * @param myself the address of the server
+     */
     private void handleUnicastMessage(DatagramPacket packet, String myself) {
-        System.out.println("Unicast receiver received " +
-                                   "message: " + new String(packet.getData(),
-                                                             packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
 
         String message = new String(packet.getData(),
-                                    packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
+                packet.getOffset(),
+                packet.getLength(),
+                StandardCharsets.UTF_8);
+
+        System.out.println("Unicast receiver received message: " + message);
 
         byte[] responseData = new byte[MAX_UDP_PACKET_SIZE];
 
         if (message.equals("list")) {
-
+            // Display the list of events
             responseData = receivedEvents.toString().getBytes();
 
         } else {
+            // Get the details of an event
             Event eventAsked =  getEventInfo(message);
             if (eventAsked != null)
                 responseData = eventAsked.toString().getBytes();
@@ -127,10 +149,13 @@ public class EventNotifier implements Callable<Integer> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
+    /**
+     * This method gets the details of an event by its name
+     * @param eventName the name of the event
+     * @return the event with the specified name
+     */
     private Event getEventInfo(String eventName) {
         for (Event event : receivedEvents) {
             if (event.getName().equalsIgnoreCase(eventName)) {
@@ -142,6 +167,11 @@ public class EventNotifier implements Callable<Integer> {
     }
 
 
+    /**
+     * This method parses an event from a messages
+     * @param message the message to parse
+     * @return the event contained in the message
+     */
     private static Event parseEventFromMessage(String message) {
         String[] parts = message.split("\n");
         if (parts.length != 4) {

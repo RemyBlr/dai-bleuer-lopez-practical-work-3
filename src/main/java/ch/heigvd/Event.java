@@ -1,5 +1,10 @@
 package ch.heigvd;
 
+/**
+ * This class implements an event
+ * It contains the name, date, location and description of the event
+ * @Authors Bleuer Rémy, Lopez Esteban
+ */
 public class Event {
     private String name;
     private String date;
@@ -21,6 +26,7 @@ public class Event {
                 "\n";
     }
 
+    // Convert the event to a byte array
     public byte[] getBytes() {
         return this.toString().getBytes();
     }
