@@ -4,23 +4,23 @@ networks:
 
 services:
   event-emitter-1:
-    build: ./path/to/your/event-emitter
-    command: ["java", "-jar", "your-event-emitter.jar", "-p", "9877", "-m", "239.0.0.1"]
-    networks:
-      - my-isolated-network
-
-  event-client:
-    build: ./path/to/your/event-client
-    command: ["java", "-jar", "your-event-client.jar", "-p", "9876", "-i", "event-emitter"]
-    networks:
-      - my-isolated-network
-    depends_on:
+    image: ghcr.io/estebanlopezgomez/dockerfile_labo:v1.0
+    command:
       - event-emitter
+      - --port=9877
+      - --multicast=239.0.0.1
+      - --auto
+      
+  event-client:
+    build: ghcr.io/estebanlopezgomez/dockerfile_labo:v1.0
+    command:
+      - get-event
+      - --port=9876
 
   event-server:
-    build: ./path/to/your/event-server
-    command: ["java", "-jar", "your-event-server.jar", "-p", "9876", "-m", "239.0.0.1:9877", "-t", "10"]
-    networks:
-      - my-isolated-network
-    depends_on:
-      - event-emitter
+    build: ghcr.io/estebanlopezgomez/dockerfile_labo:v1.0
+    command:
+      - event-server
+      - --port=9876
+      - --multicast=239.0.0.1:9877
+      - --threads=10
