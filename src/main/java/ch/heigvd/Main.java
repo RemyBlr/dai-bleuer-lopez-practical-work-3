@@ -9,7 +9,7 @@ import picocli.CommandLine.Command;
 public class Main implements Runnable {
 
     public void run() {
-        System.out.println("Please specify a subcommand: server or client.");
+        System.out.println("Please specify a subcommand: event-serverß, event-emitter or get-event");
     }
 
     public static void main(String[] args) {
