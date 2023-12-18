@@ -1,11 +1,26 @@
-version: '3'
+networks:
+  my-isolated-network:
+    name:events-network
 
 services:
+  event-emitter-1:
+    build: ./path/to/your/event-emitter
+    command: ["java", "-jar", "your-event-emitter.jar", "-p", "9877", "-m", "239.0.0.1"]
+    networks:
+      - my-isolated-network
+
+  event-client:
+    build: ./path/to/your/event-client
+    command: ["java", "-jar", "your-event-client.jar", "-p", "9876", "-i", "event-emitter"]
+    networks:
+      - my-isolated-network
+    depends_on:
+      - event-emitter
+
   event-server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: event-server
-    ports:
-      - "9876:9876/udp"
-      - "9877:9877/udp"
+    build: ./path/to/your/event-server
+    command: ["java", "-jar", "your-event-server.jar", "-p", "9876", "-m", "239.0.0.1:9877", "-t", "10"]
+    networks:
+      - my-isolated-network
+    depends_on:
+      - event-emitter
