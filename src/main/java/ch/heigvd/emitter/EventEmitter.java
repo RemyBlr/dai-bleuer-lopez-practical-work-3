@@ -91,7 +91,7 @@ public class EventEmitter implements Runnable{
                     // Send the packet
                     socket.send(packet);
 
-                    System.out.println("Multicast message sent: " + event.toString());
+                    System.out.println("Multicast message sent: \n" + event.toString());
 
                     try {
                         Thread.sleep(5000); // 5 seconds
