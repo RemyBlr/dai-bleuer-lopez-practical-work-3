@@ -1,7 +1,5 @@
 package ch.heigvd;
 
-import ch.heigvd.handlers.ClientHandler;
-
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -99,7 +97,8 @@ public class EventNotifier implements Callable<Integer> {
 
     private void handleUnicastMessage(DatagramPacket packet, String myself) {
         System.out.println("Unicast receiver received " +
-                                   "message: " + packet.toString());
+                                   "message: " + new String(packet.getData(),
+                                                             packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
 
         String message = new String(packet.getData(),
                                     packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
